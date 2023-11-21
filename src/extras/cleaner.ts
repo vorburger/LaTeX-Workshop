@@ -2,7 +2,6 @@ import * as vscode from 'vscode'
 import * as path from 'path'
 import * as fs from 'fs'
 import { glob } from 'glob'
-import * as cs from 'cross-spawn'
 import { lw } from '../lw'
 import { replaceArgumentPlaceholders } from '../utils/utils'
 
@@ -159,7 +158,7 @@ export class Cleaner {
         logger.logCommand('Clean temporary files command', command, args)
         return new Promise((resolve, _reject) => {
             // issue #3679 #3687: spawning with `detached: true` causes latexmk from MiKTeX to fail on Windows when "install on-the-fly" is enabled
-            const proc = cs.spawn(command, args, {cwd: path.dirname(rootFile)})
+            const proc = lw.spawnProc(command, args, {cwd: path.dirname(rootFile)})
             let stderr = ''
             proc.stderr.on('data', newStderr => {
                 stderr += newStderr

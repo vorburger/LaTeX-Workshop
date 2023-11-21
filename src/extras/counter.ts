@@ -1,7 +1,6 @@
 import * as vscode from 'vscode'
 import * as fs from 'fs'
 import * as path from 'path'
-import * as cs from 'cross-spawn'
 import { lw } from '../lw'
 import { getLogger } from '../utils/logging/logger'
 
@@ -115,7 +114,7 @@ export class Counter {
         }
         args.push(path.basename(file))
         logger.logCommand('Count words using command.', command, args)
-        const proc = cs.spawn(command, args, {cwd: path.dirname(file)})
+        const proc = lw.spawnProc(command, args, {cwd: path.dirname(file)})
         proc.stdout.setEncoding('utf8')
         proc.stderr.setEncoding('utf8')
 

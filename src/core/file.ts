@@ -3,7 +3,6 @@ import * as os from 'os'
 import * as path from 'path'
 import * as fs from 'fs'
 import * as tmp from 'tmp'
-import * as cs from 'cross-spawn'
 import * as utils from '../utils/utils'
 import { lw } from '../lw'
 
@@ -215,7 +214,7 @@ function kpsewhich(args: string[]): string | undefined {
     logger.log(`Calling ${command} to resolve ${args.join(' ')} .`)
 
     try {
-        const kpsewhichReturn = cs.sync(command, args, {cwd: lw.root.dir.path || vscode.workspace.workspaceFolders?.[0].uri.path})
+        const kpsewhichReturn = lw.spawnProcSync(command, args, {cwd: lw.root.dir.path || vscode.workspace.workspaceFolders?.[0].uri.path})
         if (kpsewhichReturn.status === 0) {
             const output = kpsewhichReturn.stdout.toString().replace(/\r?\n/, '')
             return output !== '' ? output : undefined

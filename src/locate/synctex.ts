@@ -1,7 +1,6 @@
 import * as vscode from 'vscode'
 import * as fs from 'fs'
 import * as path from 'path'
-import * as cs from 'cross-spawn'
 import { lw } from '../lw'
 import * as SyncTeX from './locatorlib/synctex'
 import { replaceArgumentPlaceholders } from '../utils/utils'
@@ -182,7 +181,7 @@ export class Locator {
         }
         const logTag = docker ? 'Docker' : 'Legacy'
         logger.log(`Forward from ${filePath} to ${pdfFile} on line ${line}.`)
-        const proc = cs.spawn(command, args, {cwd: path.dirname(pdfFile)})
+        const proc = lw.spawnProc(command, args, {cwd: path.dirname(pdfFile)})
         proc.stdout.setEncoding('utf8')
         proc.stderr.setEncoding('utf8')
 
@@ -242,7 +241,7 @@ export class Locator {
         const logTag = docker ? 'Docker' : 'Legacy'
         logger.log(`Backward from ${pdfPath} at x=${x}, y=${y} on page ${page}.`)
 
-        const proc = cs.spawn(command, args, {cwd: path.dirname(pdfPath)})
+        const proc = lw.spawnProc(command, args, {cwd: path.dirname(pdfPath)})
         proc.stdout.setEncoding('utf8')
         proc.stderr.setEncoding('utf8')
 
@@ -486,7 +485,7 @@ export class Locator {
             })
         }
         logger.logCommand(`Opening external viewer for SyncTeX from ${pdfFile} .`, command, args)
-        const proc = cs.spawn(command, args)
+        const proc = lw.spawnProc(command, args)
         let stdout = ''
         proc.stdout.on('data', newStdout => {
             stdout += newStdout

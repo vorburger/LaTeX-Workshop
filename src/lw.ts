@@ -1,4 +1,5 @@
 import * as vscode from 'vscode'
+import * as cs from 'cross-spawn'
 import type { getLogger } from './utils/logging/logger'
 import type { file } from './core/file'
 import type { watcher } from './core/watcher'
@@ -32,6 +33,8 @@ import type * as commands from './core/commands'
 
 /* eslint-disable */
 export const lw = {
+    spawnProc: cs.spawn,
+    spawnProcSync: cs.sync,
     extensionContext: Object.create(null) as vscode.ExtensionContext,
     extensionRoot: '',
     constant: {} as typeof constant,

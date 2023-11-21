@@ -2,7 +2,6 @@ import * as vscode from 'vscode'
 import type ws from 'ws'
 import * as path from 'path'
 import * as os from 'os'
-import * as cs from 'cross-spawn'
 import { lw, registerDisposable } from '../lw'
 import type { SyncTeXRecordForward } from '../locate/synctex'
 import { getCurrentThemeLightness } from '../utils/theme'
@@ -247,7 +246,7 @@ export class Viewer {
         }
         logger.log(`Open external viewer for ${pdfFile}`)
         logger.logCommand('Execute the external PDF viewer command', command, args)
-        const proc = cs.spawn(command, args, {cwd: path.dirname(pdfFile), detached: true})
+        const proc = lw.spawnProc(command, args, {cwd: path.dirname(pdfFile), detached: true})
         let stdout = ''
         proc.stdout.on('data', newStdout => {
             stdout += newStdout

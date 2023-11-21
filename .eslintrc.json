@@ -98,9 +98,14 @@
     },
     "overrides": [
       {
+        "files": ["test/**/*.ts"],
+        "rules": {
+          "@typescript-eslint/no-unsafe-call": "off"
+        }
+      },
+      {
         "files": ["viewer/**/*.ts"],
         "parserOptions": {
-          "ecmaVersion": 2018,
           "project": "./tsconfig.eslint.viewer.json"
         },
         "rules": {

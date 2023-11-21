@@ -1,5 +1,4 @@
 import * as vscode from 'vscode'
-import * as cs from 'cross-spawn'
 import { lw } from '../lw'
 import { getLogger } from '../utils/logging/logger'
 
@@ -12,7 +11,7 @@ export class TeXDoc {
         const texdocArgs = Array.from(configuration.get('texdoc.args') as string[])
         texdocArgs.push(packageName)
         logger.logCommand('Run texdoc command', texdocPath, texdocArgs)
-        const proc = cs.spawn(texdocPath, texdocArgs)
+        const proc = lw.spawnProc(texdocPath, texdocArgs)
 
         let stdout = ''
         proc.stdout.on('data', newStdout => {

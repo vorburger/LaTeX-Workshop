@@ -5,7 +5,7 @@ import { glob } from 'glob'
 export function run(): Promise<void> {
     // Create the mocha test
     const mocha = new Mocha({
-        ui: 'tdd',
+        ui: 'bdd',
         color: true,
         timeout: process.env['LATEXWORKSHOP_CLI'] ? 10000 : 8000,
         retries: process.env['LATEXWORKSHOP_CLI'] ? 8 : 2

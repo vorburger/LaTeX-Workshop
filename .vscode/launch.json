@@ -22,7 +22,7 @@
             "request": "launch",
             "runtimeExecutable": "${execPath}",
             "args": [
-                "${workspaceFolder}/test/fixtures/testground",
+                "${workspaceFolder}/test/fixtures/",
                 "--extensionDevelopmentPath=${workspaceFolder}",
                 "--extensionTestsPath=${workspaceFolder}/out/test/suites/index"
             ],

@@ -1,5 +1,4 @@
 import * as vscode from 'vscode'
-import * as cs from 'cross-spawn'
 import * as path from 'path'
 import * as fs from 'fs'
 import * as os from 'os'
@@ -80,7 +79,7 @@ function checkPath(): Thenable<boolean> {
     const fileExt = currentOs.fileExt
 
     const checkFormatter = (resolve: (value: boolean) => void, isFirstTry: boolean = true) => {
-        const check = cs.spawn(checker, [formatter])
+        const check = lw.spawnProc(checker, [formatter])
         let stdout: string = ''
         let stderr: string = ''
         check.stdout.setEncoding('utf8')
@@ -149,7 +148,7 @@ function format(document: vscode.TextDocument, range?: vscode.Range): Thenable<v
         })
 
         logger.logCommand('Formatting LaTeX.', formatter, args)
-        const worker = cs.spawn(formatter, args, { stdio: 'pipe', cwd: documentDirectory })
+        const worker = lw.spawnProc(formatter, args, { stdio: 'pipe', cwd: documentDirectory })
         // handle stdout/stderr
         const stdoutBuffer: string[] = []
         const stderrBuffer: string[] = []
