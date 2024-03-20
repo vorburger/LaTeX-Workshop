@@ -188,13 +188,14 @@ function getJobname(texPath: string): string {
 }
 
 /**
- * Returns the path of a PDF file with respect to `texPath`.
+ * Returns the path of a PDF file with respect to `texPath`. The returned path
+ * always uses `/` even on Windows.
  *
  * @param {string} texPath - The path of a LaTeX file.
  * @returns {string} - The path of the PDF file.
  */
 function getPdfPath(texPath: string): string {
-    return path.resolve(path.dirname(texPath), getOutDir(texPath), path.basename(`${getJobname(texPath)}.pdf`))
+    return path.resolve(path.dirname(texPath), getOutDir(texPath), path.basename(`${getJobname(texPath)}.pdf`)).replaceAll(path.sep, '/')
 }
 
 /**
