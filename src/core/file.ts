@@ -138,12 +138,17 @@ function getOutDir(texPath?: string): string {
     }
 
     const configuration = vscode.workspace.getConfiguration('latex-workshop', vscode.Uri.file(texPath))
-    const outDir = configuration.get('latex.outDir') as string
+    const outDir = configuration.get('latex.outDir') as string || './'
     const out = utils.replaceArgumentPlaceholders(texPath, file.tmpDirPath)(outDir)
+    let result = undefined
     if (outDir === '%DIR%' || outDir === '%DIR_W32%') {
-        return lw.compile.lastSteps.filter(step => step.outdir).slice(-1)[0]?.outdir ?? path.normalize(out).split(path.sep).join('/')
+        result = lw.compile.lastSteps.filter(step => step.outdir).slice(-1)[0]?.outdir
     }
-    return path.normalize(out).split(path.sep).join('/')
+    result = result ?? path.normalize(out).split(path.sep).join('/')
+    if (result !== './' && result.endsWith('/')) {
+        result = result.slice(0, -1)
+    }
+    return result
 }
 
 /**

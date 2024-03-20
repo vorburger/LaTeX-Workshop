@@ -1,4 +1,5 @@
 import * as vscode from 'vscode'
+import * as os from 'os'
 import * as sinon from 'sinon'
 import rewire from 'rewire'
 import * as assert from 'assert'
@@ -35,7 +36,7 @@ function setRoot(fixture: string, root: string) {
 function resetRoot() {
     sinon.stub(lw.root.file, 'path').value(undefined)
     sinon.stub(lw.root.dir, 'path').value(undefined)
-    sinon.stub(lw.compile, 'lastSteps')
+    sinon.stub(lw.compile, 'lastSteps').value([])
     shouldResetRoot = false
 }
 
@@ -71,11 +72,11 @@ describe(path.basename(__filename).split('.')[0] + ':', () => {
     })
 
     describe('temporary directory creation', () => {
-        it('can create temporary directories', () => {
+        it('should create temporary directories', () => {
             assert.ok(createTmpDir())
         })
 
-        it('can create different temporary directories', () => {
+        it('should create different temporary directories', () => {
             assert.notEqual(createTmpDir(), createTmpDir())
         })
 
@@ -95,76 +96,108 @@ describe(path.basename(__filename).split('.')[0] + ':', () => {
             })
         }
 
-        it('can alert temporary directory name with quotes', () => {
+        it('should alert temporary directory name with quotes', () => {
             forbiddenTemp(['\'', '"'])
         })
 
-        it('can alert temporary directory name with forbidden characters', () => {
+        it('should alert temporary directory name with forbidden characters', () => {
             forbiddenTemp(['/'])
         })
     })
 
     describe('output directory getter', () => {
-        it('can get output directory from root', () => {
+        it('should get output directory from root', () => {
             setRoot('01', 'main.tex')
             assert.equal(lw.file.getOutDir(), lw.root.dir.path)
         })
 
-        it('can get output directory without root or input latex', () => {
+        it('should get output directory without root or input latex', () => {
             assert.equal(lw.file.getOutDir(), './')
         })
 
-        it('can get output directory with an input latex', () => {
-            assert.equal(lw.file.getOutDir('/project/sub.tex'), '/project')
+        it('should get output directory with an input latex', () => {
+            assert.equal(lw.file.getOutDir('/path/to/file.tex'), '/path/to')
         })
 
-        it('can get output directory with an input latex over the root', () => {
+        it('should get output directory with an input latex over the root', () => {
             setRoot('01', 'main.tex')
-            assert.equal(lw.file.getOutDir('/project/sub.tex'), '/project')
+            assert.equal(lw.file.getOutDir('/path/to/file.tex'), '/path/to')
         })
 
-        it('can get output directory with absolute `latex.outDir` and root', async () => {
-            await setConfig('latex.outDir', '/out')
+        it('should get output directory with absolute `latex.outDir` and root', async () => {
+            await setConfig('latex.outDir', '/output')
             setRoot('01', 'main.tex')
-            assert.equal(lw.file.getOutDir(), '/out')
+            assert.equal(lw.file.getOutDir(), '/output')
         })
 
-        it('can get output directory with relative `latex.outDir` and root', async () => {
-            await setConfig('latex.outDir', './out')
+        it('should get output directory with relative `latex.outDir` and root', async () => {
+            await setConfig('latex.outDir', 'output')
             setRoot('01', 'main.tex')
-            assert.equal(lw.file.getOutDir(), 'out')
+            assert.equal(lw.file.getOutDir(), 'output')
         })
 
-        it('can get output directory with relative `latex.outDir`, root, and an input latex', async () => {
-            await setConfig('latex.outDir', './out')
+        it('should get output directory with relative `latex.outDir` with leading `./` and root', async () => {
+            await setConfig('latex.outDir', './output')
             setRoot('01', 'main.tex')
-            assert.equal(lw.file.getOutDir('/project/sub.tex'), 'out')
+            assert.equal(lw.file.getOutDir(), 'output')
         })
 
-        it('can get output directory with placeholder in `latex.outDir` and root', async () => {
+        it('should get output directory with relative `latex.outDir`, root, and an input latex', async () => {
+            await setConfig('latex.outDir', 'output')
+            setRoot('01', 'main.tex')
+            assert.equal(lw.file.getOutDir('/path/to/file.tex'), 'output')
+        })
+
+        it('should get output directory with placeholder in `latex.outDir` and root', async () => {
             await setConfig('latex.outDir', '%DIR%')
             setRoot('01', 'main.tex')
             assert.equal(lw.file.getOutDir(), lw.root.dir.path)
         })
 
-        it('can get output directory with placeholder in `latex.outDir`, root, and an input latex', async () => {
+        it('should get output directory with placeholder in `latex.outDir`, root, and an input latex', async () => {
             await setConfig('latex.outDir', '%DIR%')
             setRoot('01', 'main.tex')
-            assert.equal(lw.file.getOutDir('/project/sub.tex'), '/project')
+            assert.equal(lw.file.getOutDir('/path/to/file.tex'), '/path/to')
         })
 
-        it('can get output directory from last compilation if `latex.outDir` is `%DIR%`', async () => {
+        it('should get output directory from last compilation if `latex.outDir` is `%DIR%`', async () => {
             await setConfig('latex.outDir', '%DIR%')
             setRoot('01', 'main.tex')
-            sinon.stub(lw.compile, 'lastSteps').value([{ outdir: '/trap' }, { outdir: '/out' }])
-            assert.equal(lw.file.getOutDir(), '/out')
+            sinon.stub(lw.compile, 'lastSteps').value([{ outdir: '/trap' }, { outdir: '/output' }])
+            assert.equal(lw.file.getOutDir(), '/output')
         })
 
-        it('can ignore output directory from last compilation if `latex.outDir` is not `%DIR%`', async () => {
-            await setConfig('latex.outDir', '/out')
+        it('should ignore output directory from last compilation if `latex.outDir` is not `%DIR%`', async () => {
+            await setConfig('latex.outDir', '/output')
             setRoot('01', 'main.tex')
             sinon.stub(lw.compile, 'lastSteps').value([{ outdir: '/trap' }])
-            assert.equal(lw.file.getOutDir(), '/out')
+            assert.equal(lw.file.getOutDir(), '/output')
+        })
+
+        it('should handle empty `latex.outDir` correctly', async () => {
+            await setConfig('latex.outDir', '')
+            setRoot('01', 'main.tex')
+            assert.strictEqual(lw.file.getOutDir(), './')
+        })
+
+        it('should handle absolute `latex.outDir` with trailing slashes correctly', async () => {
+            await setConfig('latex.outDir', '/output/')
+            setRoot('01', 'main.tex')
+            assert.strictEqual(lw.file.getOutDir(), '/output')
+        })
+
+        it('should handle relative `latex.outDir` with trailing slashes correctly', async () => {
+            await setConfig('latex.outDir', 'output/')
+            setRoot('01', 'main.tex')
+            assert.strictEqual(lw.file.getOutDir(), 'output')
+        })
+
+        it('should normalize output directory paths correctly on Windows', () => {
+            if (os.platform() === 'win32') {
+                assert.strictEqual(lw.file.getOutDir('C:\\path\\to\\file.tex'), 'C:/path/to')
+            } else {
+                assert.ok(true)
+            }
         })
     })
 
