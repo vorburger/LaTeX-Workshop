@@ -310,21 +310,28 @@ describe(path.basename(__filename).split('.')[0] + ':', () => {
 
         it('should return the correct PDF path when outDir is empty', async () => {
             await setConfig('latex.outDir', '')
-            assert.strictEqual(lw.file.getPdfPath('path/to/main.tex'), 'path/to/main.pdf')
+            setRoot('01', 'main.tex')
+            const texpath = lw.root.file.path ?? ''
+            assert.strictEqual(lw.file.getPdfPath(texpath), texpath.replaceAll('.tex', '.pdf'))
         })
 
         it('should return the correct PDF path when outDir is specified', async () => {
             await setConfig('latex.outDir', 'output')
-            assert.strictEqual(lw.file.getPdfPath('path/to/main.tex'), 'path/to/output/main.pdf')
+            setRoot('01', 'main.tex')
+            const texpath = lw.root.file.path ?? ''
+            assert.strictEqual(lw.file.getPdfPath(texpath), texpath.replaceAll('main.tex', 'output/main.pdf'))
         })
 
         it('should handle spaces in file paths correctly', () => {
-            assert.strictEqual(lw.file.getPdfPath('path/with/spaces/document with spaces.tex'), 'path/with/spaces/document with spaces.pdf')
+            setRoot('01', 'document with spaces.tex')
+            const texpath = lw.root.file.path ?? ''
+            assert.strictEqual(lw.file.getPdfPath(texpath), texpath.replaceAll('.tex', '.pdf'))
         })
 
         it('should handle special characters in file names correctly', () => {
-            const basepath = 'path/with/special_!@#$%^&*()-_=+[]{}\'`~,.<>?'
-            assert.strictEqual(lw.file.getPdfPath(basepath + '.tex'), basepath + '.pdf')
+            setRoot('01', 'special_!@#$%^&*()-_=+[]{}\'`~,.<>?.tex')
+            const texpath = lw.root.file.path ?? ''
+            assert.strictEqual(lw.file.getPdfPath(texpath), texpath.replaceAll('.tex', '.pdf'))
         })
     })
 
