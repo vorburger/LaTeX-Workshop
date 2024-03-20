@@ -39,6 +39,18 @@ function resetRoot() {
     shouldResetRoot = false
 }
 
+const changedConfigs: Set<string> = new Set()
+async function setConfig(section: string, value: any) {
+    await vscode.workspace.getConfiguration('latex-workshop').update(section, value)
+    changedConfigs.add(section)
+}
+async function resetConfig() {
+    for (const section of changedConfigs.values()) {
+        await setConfig(section, undefined)
+    }
+    changedConfigs.clear()
+}
+
 describe(path.basename(__filename).split('.')[0] + ':', () => {
     const createTmpDir = rewire('../../src/core/file').__get__('createTmpDir') as () => string
 
@@ -51,7 +63,7 @@ describe(path.basename(__filename).split('.')[0] + ':', () => {
         if (shouldResetRoot) {
             resetRoot()
         }
-        await vscode.workspace.getConfiguration('latex-workshop').update('latex.outDir', undefined)
+        await resetConfig()
     })
 
     after(() => {
@@ -111,45 +123,45 @@ describe(path.basename(__filename).split('.')[0] + ':', () => {
             assert.equal(lw.file.getOutDir('/project/sub.tex'), '/project')
         })
 
-        it.only('can get output directory with absolute `latex.outDir` and root', async () => {
-            await vscode.workspace.getConfiguration('latex-workshop').update('latex.outDir', './out')
+        it('can get output directory with absolute `latex.outDir` and root', async () => {
+            await setConfig('latex.outDir', '/out')
             setRoot('01', 'main.tex')
             assert.equal(lw.file.getOutDir(), '/out')
         })
 
         it('can get output directory with relative `latex.outDir` and root', async () => {
-            await vscode.workspace.getConfiguration('latex-workshop').update('latex.outDir', './out')
+            await setConfig('latex.outDir', './out')
             setRoot('01', 'main.tex')
             assert.equal(lw.file.getOutDir(), 'out')
         })
 
         it('can get output directory with relative `latex.outDir`, root, and an input latex', async () => {
-            await vscode.workspace.getConfiguration('latex-workshop').update('latex.outDir', './out')
+            await setConfig('latex.outDir', './out')
             setRoot('01', 'main.tex')
             assert.equal(lw.file.getOutDir('/project/sub.tex'), 'out')
         })
 
         it('can get output directory with placeholder in `latex.outDir` and root', async () => {
-            await vscode.workspace.getConfiguration('latex-workshop').update('latex.outDir', '%DIR%')
+            await setConfig('latex.outDir', '%DIR%')
             setRoot('01', 'main.tex')
             assert.equal(lw.file.getOutDir(), lw.root.dir.path)
         })
 
         it('can get output directory with placeholder in `latex.outDir`, root, and an input latex', async () => {
-            await vscode.workspace.getConfiguration('latex-workshop').update('latex.outDir', '%DIR%')
+            await setConfig('latex.outDir', '%DIR%')
             setRoot('01', 'main.tex')
             assert.equal(lw.file.getOutDir('/project/sub.tex'), '/project')
         })
 
         it('can get output directory from last compilation if `latex.outDir` is `%DIR%`', async () => {
-            await vscode.workspace.getConfiguration('latex-workshop').update('latex.outDir', '%DIR%')
+            await setConfig('latex.outDir', '%DIR%')
             setRoot('01', 'main.tex')
             sinon.stub(lw.compile, 'lastSteps').value([{ outdir: '/trap' }, { outdir: '/out' }])
             assert.equal(lw.file.getOutDir(), '/out')
         })
 
         it('can ignore output directory from last compilation if `latex.outDir` is not `%DIR%`', async () => {
-            await vscode.workspace.getConfiguration('latex-workshop').update('latex.outDir', '/out')
+            await setConfig('latex.outDir', '/out')
             setRoot('01', 'main.tex')
             sinon.stub(lw.compile, 'lastSteps').value([{ outdir: '/trap' }])
             assert.equal(lw.file.getOutDir(), '/out')
