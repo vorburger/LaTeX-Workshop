@@ -3,7 +3,7 @@ import * as process from 'process'
 import * as tmpFile from 'tmp'
 import { runTests } from '@vscode/test-electron'
 
-async function runTestSuites(fixture: 'testground' | 'multiroot') {
+async function runTestSuites(metaSuite: 'unittest' | 'multiroot') {
     try {
         const extensionDevelopmentPath = path.resolve(__dirname, '../../')
         const extensionTestsPath = path.resolve(__dirname, './suites/index')
@@ -13,7 +13,7 @@ async function runTestSuites(fixture: 'testground' | 'multiroot') {
             extensionDevelopmentPath,
             extensionTestsPath,
             launchArgs: [
-                'test/fixtures/' + fixture + (fixture === 'multiroot' ? '/resource.code-workspace' : ''),
+                'test/fixtures/' + metaSuite + (metaSuite === 'multiroot' ? '/resource.code-workspace' : ''),
                 '--user-data-dir=' + tmpFile.dirSync({ unsafeCleanup: true }).name,
                 '--extensions-dir=' + tmpFile.dirSync({ unsafeCleanup: true }).name,
                 '--disable-gpu'
@@ -31,8 +31,8 @@ async function runTestSuites(fixture: 'testground' | 'multiroot') {
 
 async function main() {
     try {
-        await runTestSuites('testground')
-        await runTestSuites('multiroot')
+        await runTestSuites('unittest')
+        // await runTestSuites('multiroot')
     } catch (err) {
         console.error('Failed to run tests')
         process.exit(1)

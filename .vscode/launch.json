@@ -17,12 +17,12 @@
             "preLaunchTask": "task-watch-all"
         },
         {
-            "name": "Test testground",
+            "name": "Unit Test",
             "type": "extensionHost",
             "request": "launch",
             "runtimeExecutable": "${execPath}",
             "args": [
-                "${workspaceFolder}/test/fixtures/testground",
+                "${workspaceFolder}/test/fixtures/unittest",
                 "--extensionDevelopmentPath=${workspaceFolder}",
                 "--extensionTestsPath=${workspaceFolder}/out/test/suites/index"
             ],
