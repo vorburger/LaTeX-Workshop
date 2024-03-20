@@ -26,7 +26,7 @@ function getContext(...paths: string[]) {
         vscode.workspace.workspaceFile?.fsPath ?? vscode.workspace.workspaceFolders?.[0].uri.fsPath ?? '',
         path.basename(__filename).split('.')[0],
         ...paths
-    ).replaceAll('\\', '/')
+    ).replaceAll(path.sep, '/')
 }
 
 function setRoot(fixture: string, root: string) {
@@ -335,7 +335,6 @@ describe(path.basename(__filename).split('.')[0] + ':', () => {
         })
     })
 
-    // getFlsPath,
     // hasBinaryExt,
     // hasTeXExt,
     // hasTexLangId,
