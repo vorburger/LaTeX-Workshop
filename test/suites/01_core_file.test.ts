@@ -5,6 +5,7 @@ import rewire from 'rewire'
 import * as assert from 'assert'
 import * as path from 'path'
 import { lw } from '../../src/lw'
+console.log(lw.file.getOutDir())
 
 function stubObject(obj: any, ignore?: string) {
     Object.getOwnPropertyNames(obj).forEach(item => {
@@ -312,26 +313,26 @@ describe(path.basename(__filename).split('.')[0] + ':', () => {
             await setConfig('latex.outDir', '')
             setRoot('01', 'main.tex')
             const texpath = lw.root.file.path ?? ''
-            assert.strictEqual(lw.file.getPdfPath(texpath), texpath.replaceAll('.tex', '.pdf'))
+            assert.strictEqual(lw.file.getPdfPath(texpath), texpath.replaceAll(path.sep, '/').replaceAll('.tex', '.pdf'))
         })
 
         it('should return the correct PDF path when outDir is specified', async () => {
             await setConfig('latex.outDir', 'output')
             setRoot('01', 'main.tex')
             const texpath = lw.root.file.path ?? ''
-            assert.strictEqual(lw.file.getPdfPath(texpath), texpath.replaceAll('main.tex', 'output/main.pdf'))
+            assert.strictEqual(lw.file.getPdfPath(texpath), texpath.replaceAll(path.sep, '/').replaceAll('main.tex', 'output/main.pdf'))
         })
 
         it('should handle spaces in file paths correctly', () => {
             setRoot('01', 'document with spaces.tex')
             const texpath = lw.root.file.path ?? ''
-            assert.strictEqual(lw.file.getPdfPath(texpath), texpath.replaceAll('.tex', '.pdf'))
+            assert.strictEqual(lw.file.getPdfPath(texpath), texpath.replaceAll(path.sep, '/').replaceAll('.tex', '.pdf'))
         })
 
         it('should handle special characters in file names correctly', () => {
             setRoot('01', 'special_!@#$%^&*()-_=+[]{}\'`~,.<>?.tex')
             const texpath = lw.root.file.path ?? ''
-            assert.strictEqual(lw.file.getPdfPath(texpath), texpath.replaceAll('.tex', '.pdf'))
+            assert.strictEqual(lw.file.getPdfPath(texpath), texpath.replaceAll(path.sep, '/').replaceAll('.tex', '.pdf'))
         })
     })
 
