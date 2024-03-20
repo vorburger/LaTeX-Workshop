@@ -144,7 +144,7 @@ function getOutDir(texPath?: string): string {
     if (outDir === '%DIR%' || outDir === '%DIR_W32%') {
         result = lw.compile.lastSteps.filter(step => step.outdir).slice(-1)[0]?.outdir
     }
-    result = result ?? path.normalize(out).split(path.sep).join('/')
+    result = result ?? path.normalize(out).replaceAll(path.sep, '/')
     if (result !== './' && result.endsWith('/')) {
         result = result.slice(0, -1)
     }
@@ -198,7 +198,8 @@ function getPdfPath(texPath: string): string {
 }
 
 /**
- * Search for a `.fls` file associated to a tex file
+ * Search for a `.fls` file associated to a tex file. The returned path always
+ * uses `/` even on Windows.
  *
  * @param {string} texPath - The path of LaTeX file.
  * @returns {string | undefined} - The path of the .fls file or undefined.
@@ -209,10 +210,10 @@ function getFlsPath(texPath: string): string | undefined {
     const fileName = path.parse(getJobname(texPath)).name + '.fls'
     let flsFile = path.resolve(rootDir, path.join(outDir, fileName))
     if (fs.existsSync(flsFile)) {
-        return flsFile
+        return flsFile.replaceAll(path.sep, '/')
     }
     flsFile = path.resolve(rootDir, lw.compile.lastSteps.filter(step => step.auxdir).slice(-1)[0]?.auxdir ?? '', fileName)
-    return fs.existsSync(flsFile) ? flsFile : undefined
+    return fs.existsSync(flsFile) ? flsFile.replaceAll(path.sep, '/') : undefined
 }
 
 const kpsecache: {[query: string]: string} = {}
