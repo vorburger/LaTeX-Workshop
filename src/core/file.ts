@@ -3,7 +3,6 @@ import * as os from 'os'
 import * as path from 'path'
 import * as fs from 'fs'
 import * as tmp from 'tmp'
-import * as cs from 'cross-spawn'
 import * as utils from '../utils/utils'
 import { lw } from '../lw'
 
@@ -24,7 +23,11 @@ export const file = {
     hasDtxLangId,
     exists,
     read,
-    kpsewhich,
+    kpsewhich
+}
+
+export const _testingFn = {
+    createTmpDir
 }
 
 /**
@@ -225,8 +228,8 @@ const kpsecache: {[query: string]: string} = {}
  * @returns {string | undefined} - The resolved file path or undefined if not
  * found.
  */
-function kpsewhich(args: string[]): string | undefined {
-    const query = args.join(' ')
+function kpsewhich(target: string, isBib: boolean = false): string | undefined {
+    const query = (isBib ? '-format=.bib ' : '') + target
     if (kpsecache[query]) {
         logger.log(`kpsewhich cache hit on ${query}: ${kpsecache[query]} .`)
         return kpsecache[query]
@@ -235,14 +238,15 @@ function kpsewhich(args: string[]): string | undefined {
     logger.log(`Calling ${command} to resolve ${query} .`)
 
     try {
-        const kpsewhichReturn = cs.sync(command, args, {cwd: lw.root.dir.path || vscode.workspace.workspaceFolders?.[0].uri.path})
+        const args = isBib ? ['-format=.bib', target] : [target]
+        const kpsewhichReturn = lw.external.sync(command, args, {cwd: lw.root.dir.path || vscode.workspace.workspaceFolders?.[0].uri.path})
         if (kpsewhichReturn.status === 0) {
             const output = kpsewhichReturn.stdout.toString().replace(/\r?\n/, '')
             logger.log(`kpsewhich returned with '${output}'.`)
             if (output !== '') {
                 kpsecache[query] = output
-                return output
             }
+            return output
         }
         logger.log(`kpsewhich returned with non-zero code ${kpsewhichReturn.status}.`)
         return undefined
@@ -283,7 +287,7 @@ function getBibPath(bib: string, baseDir: string): string[] {
 
     if (bibPath === undefined || bibPath.length === 0) {
         if (configuration.get('kpsewhich.enabled')) {
-            const kpsePath = kpsewhich(['-format=.bib', bib])
+            const kpsePath = kpsewhich(bib, true)
             return kpsePath ? [ kpsePath ] : []
         } else {
             logger.log(`Cannot resolve bib path: ${bib} .`)
@@ -332,10 +336,10 @@ async function exists(uri: vscode.Uri): Promise<boolean> {
         if (uri.scheme === 'file') {
             return fs.existsSync(uri.fsPath)
         } else {
-            await vscode.workspace.fs.stat(uri)
+            await lw.external.stat(uri)
             return true
         }
-    } catch {
+    } catch (error) {
         return false
     }
 }

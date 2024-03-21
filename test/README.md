@@ -16,7 +16,7 @@ The TeX files related are automatically created before the test and removed afte
 
 We have a `Run Tests` launch configuration in `.vscode/launch.json`.
 In the config item, the first `args` passed to `code` defines the workspace to open: `testground` typically, and `multiroot/resource.code-workspace` for the multi-root workspace tests.
-Additionally, the `LATEXWORKSHOP_SUITE` envvar defines the suites to be executed, separated by commas and all if left empty.
+Additionally, the `LATEXWORKSHOP_TEST_SUITE` envvar defines the suites to be executed, separated by commas and all if left empty.
 
 
 ## Executing Tests on GitHub Actions

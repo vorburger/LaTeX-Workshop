@@ -46,7 +46,7 @@ export function run(testName: string, cb: (fixturePath: string) => unknown, plat
     if (path.basename(fixture) !== suite.fixture) {
         return
     }
-    if (process.env['LATEXWORKSHOP_SUITE'] && !process.env['LATEXWORKSHOP_SUITE'].split(',').find(candidate => suite.name.includes(candidate))) {
+    if (process.env['LATEXWORKSHOP_TEST_SUITE'] && !process.env['LATEXWORKSHOP_TEST_SUITE'].split(',').find(candidate => suite.name.includes(candidate))) {
         return
     }
     if (platforms && !platforms.includes(os.platform())) {

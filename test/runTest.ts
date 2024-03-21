@@ -19,6 +19,7 @@ async function runTestSuites(metaSuite: 'unittest' | 'multiroot') {
                 '--disable-gpu'
             ],
             extensionTestsEnv: {
+                LATEXWORKSHOP_TEST: '1',
                 LATEXWORKSHOP_CLI: '1'
             }
         })

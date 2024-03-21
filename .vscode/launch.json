@@ -32,7 +32,8 @@
             ],
             "preLaunchTask": "task-watch-all",
             "env": {
-                "LATEXWORKSHOP_SUITE": ""
+                "LATEXWORKSHOP_TEST": "1",
+                "LATEXWORKSHOP_TEST_SUITE": ""
             }
         },
         {
@@ -51,7 +52,8 @@
             ],
             "preLaunchTask": "task-watch-all",
             "env": {
-                "LATEXWORKSHOP_SUITE": ""
+                "LATEXWORKSHOP_TEST": "1",
+                "LATEXWORKSHOP_TEST_SUITE": ""
             }
         },
         {
