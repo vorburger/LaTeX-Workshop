@@ -24,6 +24,14 @@ jobs:
         key: ${{ env.cache-version }}-${{ runner.os }}-texlive-essential
         restore-keys: |
           ${{ env.cache-version }}-${{ runner.os }}-texlive-essential
+    - name: Cache VSCode
+      id: cache-vscode
+      uses: actions/cache@v4
+      with:
+        path: /Users/runner/work/LaTeX-Workshop/LaTeX-Workshop/.vscode-test
+        key: ${{ env.cache-version }}-${{ runner.os }}-vscode
+        restore-keys: |
+          ${{ env.cache-version }}-${{ runner.os }}-vscode
     - name: Download install-tl.zip
       run: |
         curl -s -O -L http://mirror.ctan.org/systems/texlive/tlnet/install-tl.zip
