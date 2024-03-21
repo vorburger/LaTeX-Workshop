@@ -30,7 +30,10 @@ function getContext(...paths: string[ ]) {
 }
 
 function setRoot(fixture: string, root: string) {
-    const context = getContext(fixture)
+    let context = getContext(fixture)
+    if (os.platform() === 'win32') {
+        context = context.charAt(0).toUpperCase() + context.slice(1)
+    }
     sinon.stub(lw.root.file, 'path').value(path.resolve(context, root))
     sinon.stub(lw.root.dir, 'path').value(context)
     sinon.stub(lw.compile, 'lastSteps').value([ ])
@@ -51,6 +54,14 @@ async function resetConfig() {
         await setConfig(section, undefined)
     }
     changedConfigs.clear()
+}
+
+function pathEqual(path1?: string, path2?: string) {
+    if (path1 === undefined || path2 === undefined) {
+        assert.strictEqual(path1, path2)
+    } else {
+        assert.strictEqual(path1.replaceAll(path.sep, '/'), path2.replaceAll(path.sep, '/'))
+    }
 }
 
 describe(path.basename(__filename).split('.')[0] + ':', () => {
@@ -105,107 +116,107 @@ describe(path.basename(__filename).split('.')[0] + ':', () => {
     describe('lw.file.getOutDir', () => {
         it('should get output directory from root', () => {
             setRoot('01', 'main.tex')
-            assert.strictEqual(lw.file.getOutDir(), lw.root.dir.path)
+            pathEqual(lw.file.getOutDir(), lw.root.dir.path)
         })
 
         it('should get output directory without root or input latex', () => {
-            assert.strictEqual(lw.file.getOutDir(), './')
+            pathEqual(lw.file.getOutDir(), './')
         })
 
         it('should get output directory with an input latex', () => {
-            assert.strictEqual(lw.file.getOutDir('/path/to/file.tex'), '/path/to')
+            pathEqual(lw.file.getOutDir('/path/to/file.tex'), '/path/to')
         })
 
         it('should get output directory with an input latex over the root', () => {
             setRoot('01', 'main.tex')
-            assert.strictEqual(lw.file.getOutDir('/path/to/file.tex'), '/path/to')
+            pathEqual(lw.file.getOutDir('/path/to/file.tex'), '/path/to')
         })
 
         it('should get output directory with absolute `latex.outDir` and root', async () => {
             await setConfig('latex.outDir', '/output')
             setRoot('01', 'main.tex')
-            assert.strictEqual(lw.file.getOutDir(), '/output')
+            pathEqual(lw.file.getOutDir(), '/output')
         })
 
         it('should get output directory with relative `latex.outDir` and root', async () => {
             await setConfig('latex.outDir', 'output')
             setRoot('01', 'main.tex')
-            assert.strictEqual(lw.file.getOutDir(), 'output')
+            pathEqual(lw.file.getOutDir(), 'output')
         })
 
         it('should get output directory with relative `latex.outDir` with leading `./` and root', async () => {
             await setConfig('latex.outDir', './output')
             setRoot('01', 'main.tex')
-            assert.strictEqual(lw.file.getOutDir(), 'output')
+            pathEqual(lw.file.getOutDir(), 'output')
         })
 
         it('should get output directory with relative `latex.outDir`, root, and an input latex', async () => {
             await setConfig('latex.outDir', 'output')
             setRoot('01', 'main.tex')
-            assert.strictEqual(lw.file.getOutDir('/path/to/file.tex'), 'output')
+            pathEqual(lw.file.getOutDir('/path/to/file.tex'), 'output')
         })
 
         it('should get output directory with placeholder in `latex.outDir` and root', async () => {
             await setConfig('latex.outDir', '%DIR%')
             setRoot('01', 'main.tex')
-            assert.strictEqual(lw.file.getOutDir(), lw.root.dir.path)
+            pathEqual(lw.file.getOutDir(), lw.root.dir.path)
         })
 
         it('should get output directory with placeholder in `latex.outDir`, root, and an input latex', async () => {
             await setConfig('latex.outDir', '%DIR%')
             setRoot('01', 'main.tex')
-            assert.strictEqual(lw.file.getOutDir('/path/to/file.tex'), '/path/to')
+            pathEqual(lw.file.getOutDir('/path/to/file.tex'), '/path/to')
         })
 
         it('should get output directory from last compilation if `latex.outDir` is `%DIR%`', async () => {
             await setConfig('latex.outDir', '%DIR%')
             setRoot('01', 'main.tex')
             sinon.stub(lw.compile, 'lastSteps').value([{ outdir: '/trap' }, { outdir: '/output' }])
-            assert.strictEqual(lw.file.getOutDir(), '/output')
+            pathEqual(lw.file.getOutDir(), '/output')
         })
 
         it('should get output directory from last compilation `outdir` is recorded in steps other than the last one', async () => {
             await setConfig('latex.outDir', '%DIR%')
             setRoot('01', 'main.tex')
             sinon.stub(lw.compile, 'lastSteps').value([{ outdir: '/output' }, { }])
-            assert.strictEqual(lw.file.getOutDir(), '/output')
+            pathEqual(lw.file.getOutDir(), '/output')
         })
 
         it('should ignore output directory from last compilation if `latex.outDir` is not `%DIR%`', async () => {
             await setConfig('latex.outDir', '/output')
             setRoot('01', 'main.tex')
             sinon.stub(lw.compile, 'lastSteps').value([{ outdir: '/trap' }])
-            assert.strictEqual(lw.file.getOutDir(), '/output')
+            pathEqual(lw.file.getOutDir(), '/output')
         })
 
         it('should ignore output directory from last compilation if no `outdir` is recorded', async () => {
             await setConfig('latex.outDir', '%DIR%')
             setRoot('01', 'main.tex')
             sinon.stub(lw.compile, 'lastSteps').value([{ }])
-            assert.strictEqual(lw.file.getOutDir(), lw.root.dir.path)
+            pathEqual(lw.file.getOutDir(), lw.root.dir.path)
         })
 
         it('should handle empty `latex.outDir` correctly', async () => {
             await setConfig('latex.outDir', '')
             setRoot('01', 'main.tex')
-            assert.strictEqual(lw.file.getOutDir(), './')
+            pathEqual(lw.file.getOutDir(), './')
         })
 
         it('should handle absolute `latex.outDir` with trailing slashes correctly', async () => {
             await setConfig('latex.outDir', '/output/')
             setRoot('01', 'main.tex')
-            assert.strictEqual(lw.file.getOutDir(), '/output')
+            pathEqual(lw.file.getOutDir(), '/output')
         })
 
         it('should handle relative `latex.outDir` with trailing slashes correctly', async () => {
             await setConfig('latex.outDir', 'output/')
             setRoot('01', 'main.tex')
-            assert.strictEqual(lw.file.getOutDir(), 'output')
+            pathEqual(lw.file.getOutDir(), 'output')
         })
 
         it('should normalize output directory paths correctly on Windows', () => {
             if (os.platform() === 'win32') {
-                assert.strictEqual(lw.file.getOutDir('C:\\path\\to\\file.tex'), 'C:/path/to')
+                pathEqual(lw.file.getOutDir('C:\\path\\to\\file.tex'), 'C:/path/to')
             } else {
                 assert.ok(true)
             }
@@ -214,36 +225,36 @@ describe(path.basename(__filename).split('.')[0] + ':', () => {
 
     describe('lw.file.getFlsPath', () => {
         it('should return the correct path when .fls exists in the output directory', () => {
-            assert.strictEqual(lw.file.getFlsPath(getContext('01', 'main.tex')), getContext('01', 'main.fls'))
+            pathEqual(lw.file.getFlsPath(getContext('01', 'main.tex')), getContext('01', 'main.fls'))
         })
 
         it('should return undefined when .fls does not exist in the output directory', () => {
-            assert.strictEqual(lw.file.getFlsPath(getContext('01', 'nonexistent.tex')), undefined)
+            pathEqual(lw.file.getFlsPath(getContext('01', 'nonexistent.tex')), undefined)
         })
 
         it('should respect custom output directory when config is set', async () => {
             await setConfig('latex.outDir', 'output')
-            assert.strictEqual(lw.file.getFlsPath(getContext('01', 'main.tex')), getContext('01', 'output', 'main.fls'))
+            pathEqual(lw.file.getFlsPath(getContext('01', 'main.tex')), getContext('01', 'output', 'main.fls'))
         })
 
         it('should handle when `auxdir` is missing in last compilation', () => {
             sinon.stub(lw.compile, 'lastSteps').value([{ }])
-            assert.strictEqual(lw.file.getFlsPath(getContext('01', 'main.tex')), getContext('01', 'main.fls'))
+            pathEqual(lw.file.getFlsPath(getContext('01', 'main.tex')), getContext('01', 'main.fls'))
         })
 
         it('should handle when `auxdir` is available in last compilation, but another .fls file in the output folder has higher priority', () => {
             sinon.stub(lw.compile, 'lastSteps').value([{ auxdir: 'auxfiles' }])
-            assert.strictEqual(lw.file.getFlsPath(getContext('01', 'main.tex')), getContext('01', 'main.fls'))
+            pathEqual(lw.file.getFlsPath(getContext('01', 'main.tex')), getContext('01', 'main.fls'))
         })
 
         it('should handle when `auxdir` is available in last compilation', () => {
             sinon.stub(lw.compile, 'lastSteps').value([{ auxdir: 'auxfiles' }])
-            assert.strictEqual(lw.file.getFlsPath(getContext('01', 'another.tex')), getContext('01', 'auxfiles', 'another.fls'))
+            pathEqual(lw.file.getFlsPath(getContext('01', 'another.tex')), getContext('01', 'auxfiles', 'another.fls'))
         })
 
         it('should handle when `auxdir` is available in last compilation but not the last step', () => {
             sinon.stub(lw.compile, 'lastSteps').value([{ auxdir: 'auxfiles' }, { }])
-            assert.strictEqual(lw.file.getFlsPath(getContext('01', 'another.tex')), getContext('01', 'auxfiles', 'another.fls'))
+            pathEqual(lw.file.getFlsPath(getContext('01', 'another.tex')), getContext('01', 'auxfiles', 'another.fls'))
         })
     })
 
@@ -375,26 +386,26 @@ describe(path.basename(__filename).split('.')[0] + ':', () => {
             await setConfig('latex.outDir', '')
             setRoot('01', 'main.tex')
             const texpath = lw.root.file.path ?? ''
-            assert.strictEqual(lw.file.getPdfPath(texpath), texpath.replaceAll(path.sep, '/').replaceAll('.tex', '.pdf'))
+            pathEqual(lw.file.getPdfPath(texpath), texpath.replaceAll('.tex', '.pdf'))
         })
 
         it('should return the correct PDF path when outDir is specified', async () => {
             await setConfig('latex.outDir', 'output')
             setRoot('01', 'main.tex')
             const texpath = lw.root.file.path ?? ''
-            assert.strictEqual(lw.file.getPdfPath(texpath), texpath.replaceAll(path.sep, '/').replaceAll('main.tex', 'output/main.pdf'))
+            pathEqual(lw.file.getPdfPath(texpath), texpath.replaceAll('main.tex', 'output/main.pdf'))
         })
 
         it('should handle spaces in file paths correctly', () => {
             setRoot('01', 'document with spaces.tex')
             const texpath = lw.root.file.path ?? ''
-            assert.strictEqual(lw.file.getPdfPath(texpath), texpath.replaceAll(path.sep, '/').replaceAll('.tex', '.pdf'))
+            pathEqual(lw.file.getPdfPath(texpath), texpath.replaceAll('.tex', '.pdf'))
         })
 
         it('should handle special characters in file names correctly', () => {
             setRoot('01', 'special_!@#$%^&*()-_=+[ ]{}\'`~,.<>?.tex')
             const texpath = lw.root.file.path ?? ''
-            assert.strictEqual(lw.file.getPdfPath(texpath), texpath.replaceAll(path.sep, '/').replaceAll('.tex', '.pdf'))
+            pathEqual(lw.file.getPdfPath(texpath), texpath.replaceAll('.tex', '.pdf'))
         })
     })
 
