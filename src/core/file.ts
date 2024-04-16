@@ -27,7 +27,7 @@ export const file = {
     kpsewhich
 }
 
-export const _testingFn = {
+export const _tests = {
     createTmpDir
 }
 

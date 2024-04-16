@@ -4,7 +4,7 @@ import * as sinon from 'sinon'
 import * as assert from 'assert'
 import * as path from 'path'
 import { lw } from '../../src/lw'
-import { _testingFn as fileUnitTestFn } from '../../src/core/file'
+import { _tests } from '../../src/core/file'
 
 function stubObject(obj: any, ignore?: string) {
     Object.getOwnPropertyNames(obj).forEach(item => {
@@ -36,12 +36,10 @@ function setRoot(fixture: string, root: string) {
     }
     sinon.stub(lw.root.file, 'path').value(path.resolve(context, root))
     sinon.stub(lw.root.dir, 'path').value(context)
-    sinon.stub(lw.compile, 'lastSteps').value([ ])
 }
 function resetRoot() {
     sinon.stub(lw.root.file, 'path').value(undefined)
     sinon.stub(lw.root.dir, 'path').value(undefined)
-    sinon.stub(lw.compile, 'lastSteps').value([ ])
 }
 
 const changedConfigs: Set<string> = new Set()
@@ -81,11 +79,11 @@ describe(path.basename(__filename).split('.')[0] + ':', () => {
 
     describe('temporary directory creation', () => {
         it('should create temporary directories', () => {
-            assert.ok(fileUnitTestFn?.createTmpDir())
+            assert.ok(_tests?.createTmpDir())
         })
 
         it('should create different temporary directories', () => {
-            assert.notEqual(fileUnitTestFn?.createTmpDir(), fileUnitTestFn?.createTmpDir())
+            assert.notEqual(_tests?.createTmpDir(), _tests?.createTmpDir())
         })
 
         function forbiddenTemp(chars: string[ ]) {
@@ -94,7 +92,7 @@ describe(path.basename(__filename).split('.')[0] + ':', () => {
             chars.forEach(char => {
                 tmpNames.forEach(envvar => process.env[envvar] = (process.env[envvar] === undefined ? undefined : ('\\Test ' + char)))
                 try {
-                    fileUnitTestFn?.createTmpDir()
+                    _tests?.createTmpDir()
                     assert.fail('Expected an error to be thrown')
                 } catch {
                     assert.ok(true)
@@ -171,28 +169,21 @@ describe(path.basename(__filename).split('.')[0] + ':', () => {
         it('should get output directory from last compilation if `latex.outDir` is `%DIR%`', async () => {
             await setConfig('latex.outDir', '%DIR%')
             setRoot('01', 'main.tex')
-            sinon.stub(lw.compile, 'lastSteps').value([{ outdir: '/trap' }, { outdir: '/output' }])
-            pathEqual(lw.file.getOutDir(), '/output')
-        })
-
-        it('should get output directory from last compilation `outdir` is recorded in steps other than the last one', async () => {
-            await setConfig('latex.outDir', '%DIR%')
-            setRoot('01', 'main.tex')
-            sinon.stub(lw.compile, 'lastSteps').value([{ outdir: '/output' }, { }])
+            lw.file.setTeXDirs(lw.root.file.path ?? '', '/output')
             pathEqual(lw.file.getOutDir(), '/output')
         })
 
         it('should ignore output directory from last compilation if `latex.outDir` is not `%DIR%`', async () => {
             await setConfig('latex.outDir', '/output')
             setRoot('01', 'main.tex')
-            sinon.stub(lw.compile, 'lastSteps').value([{ outdir: '/trap' }])
+            lw.file.setTeXDirs(lw.root.file.path ?? '', '/trap')
             pathEqual(lw.file.getOutDir(), '/output')
         })
 
         it('should ignore output directory from last compilation if no `outdir` is recorded', async () => {
             await setConfig('latex.outDir', '%DIR%')
             setRoot('01', 'main.tex')
-            sinon.stub(lw.compile, 'lastSteps').value([{ }])
+            lw.file.setTeXDirs(lw.root.file.path ?? '')
             pathEqual(lw.file.getOutDir(), lw.root.dir.path)
         })
 
@@ -237,24 +228,22 @@ describe(path.basename(__filename).split('.')[0] + ':', () => {
             pathEqual(lw.file.getFlsPath(getContext('01', 'main.tex')), getContext('01', 'output', 'main.fls'))
         })
 
+        it('should handle when `auxdir` is available in last compilation', () => {
+            setRoot('01', 'another.tex')
+            lw.file.setTeXDirs(lw.root.file.path ?? '', undefined, 'auxfiles')
+            pathEqual(lw.file.getFlsPath(getContext('01', 'another.tex')), getContext('01', 'auxfiles', 'another.fls'))
+        })
+
         it('should handle when `auxdir` is missing in last compilation', () => {
-            sinon.stub(lw.compile, 'lastSteps').value([{ }])
+            setRoot('01', 'main.tex')
+            lw.file.setTeXDirs(lw.root.file.path ?? '', '/output')
             pathEqual(lw.file.getFlsPath(getContext('01', 'main.tex')), getContext('01', 'main.fls'))
         })
 
         it('should handle when `auxdir` is available in last compilation, but another .fls file in the output folder has higher priority', () => {
-            sinon.stub(lw.compile, 'lastSteps').value([{ auxdir: 'auxfiles' }])
+            setRoot('01', 'main.tex')
+            lw.file.setTeXDirs(lw.root.file.path ?? '', undefined, 'auxfiles')
             pathEqual(lw.file.getFlsPath(getContext('01', 'main.tex')), getContext('01', 'main.fls'))
-        })
-
-        it('should handle when `auxdir` is available in last compilation', () => {
-            sinon.stub(lw.compile, 'lastSteps').value([{ auxdir: 'auxfiles' }])
-            pathEqual(lw.file.getFlsPath(getContext('01', 'another.tex')), getContext('01', 'auxfiles', 'another.fls'))
-        })
-
-        it('should handle when `auxdir` is available in last compilation but not the last step', () => {
-            sinon.stub(lw.compile, 'lastSteps').value([{ auxdir: 'auxfiles' }, { }])
-            pathEqual(lw.file.getFlsPath(getContext('01', 'another.tex')), getContext('01', 'auxfiles', 'another.fls'))
         })
     })
 
@@ -293,7 +282,7 @@ describe(path.basename(__filename).split('.')[0] + ':', () => {
 
         it('should handle case when kpsewhich is disabled and BibTeX file not found', async () => {
             const stub = sinon.stub(lw.external, 'sync').returns({ pid: 0, status: 0, stdout: '/path/to/nonexistent.bib', output: [''], stderr: '', signal: 'SIGTERM' })
-            await setConfig('kpsewhich.enabled', false)
+            await setConfig('kpsewhich.bibtex.enabled', false)
             setRoot('01', 'main.tex')
             const result = lw.file.getBibPath('nonexistent.bib', lw.root.dir.path ?? '')
             stub.restore()
@@ -302,7 +291,7 @@ describe(path.basename(__filename).split('.')[0] + ':', () => {
 
         it('should handle case when kpsewhich is enabled and BibTeX file not found', async () => {
             const stub = sinon.stub(lw.external, 'sync').returns({ pid: 0, status: 0, stdout: '/path/to/nonexistent.bib', output: [''], stderr: '', signal: 'SIGTERM' })
-            await setConfig('kpsewhich.enabled', true)
+            await setConfig('kpsewhich.bibtex.enabled', true)
             setRoot('01', 'main.tex')
             const result = lw.file.getBibPath('nonexistent.bib', lw.root.dir.path ?? '')
             stub.restore()
@@ -311,7 +300,7 @@ describe(path.basename(__filename).split('.')[0] + ':', () => {
 
         it('should return an empty array when kpsewhich is enabled but file is not found', async () => {
             const stub = sinon.stub(lw.external, 'sync').returns({ pid: 0, status: 0, stdout: '', output: [''], stderr: '', signal: 'SIGTERM' })
-            await setConfig('kpsewhich.enabled', true)
+            await setConfig('kpsewhich.bibtex.enabled', true)
             setRoot('01', 'main.tex')
             const result = lw.file.getBibPath('another-nonexistent.bib', lw.root.dir.path ?? '')
             stub.restore()
@@ -440,21 +429,21 @@ describe(path.basename(__filename).split('.')[0] + ':', () => {
         })
     })
 
-    describe('lw.file.hasTexLangId', () => {
+    describe('lw.file.hasTeXLangId', () => {
         it('should return true for supported TeX languages', () => {
-            assert.ok(lw.file.hasTexLangId('tex'))
-            assert.ok(lw.file.hasTexLangId('latex'))
-            assert.ok(lw.file.hasTexLangId('latex-expl3'))
-            assert.ok(lw.file.hasTexLangId('doctex'))
-            assert.ok(lw.file.hasTexLangId('pweave'))
-            assert.ok(lw.file.hasTexLangId('jlweave'))
-            assert.ok(lw.file.hasTexLangId('rsweave'))
+            assert.ok(lw.file.hasTeXLangId('tex'))
+            assert.ok(lw.file.hasTeXLangId('latex'))
+            assert.ok(lw.file.hasTeXLangId('latex-expl3'))
+            assert.ok(lw.file.hasTeXLangId('doctex'))
+            assert.ok(lw.file.hasTeXLangId('pweave'))
+            assert.ok(lw.file.hasTeXLangId('jlweave'))
+            assert.ok(lw.file.hasTeXLangId('rsweave'))
         })
 
         it('should return false for unsupported languages', () => {
-            assert.ok(!lw.file.hasTexLangId('markdown'))
-            assert.ok(!lw.file.hasTexLangId('python'))
-            assert.ok(!lw.file.hasTexLangId('html'))
+            assert.ok(!lw.file.hasTeXLangId('markdown'))
+            assert.ok(!lw.file.hasTeXLangId('python'))
+            assert.ok(!lw.file.hasTeXLangId('html'))
         })
     })
 
