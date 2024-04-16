@@ -3,7 +3,7 @@
   "displayName": "LaTeX Workshop",
   "description": "Boost LaTeX typesetting efficiency with preview, compile, autocomplete, colorize, and more.",
   "icon": "icons/icon.png",
-  "version": "9.19.2",
+  "version": "9.20.0",
   "publisher": "James-Yu",
   "license": "MIT",
   "homepage": "https://github.com/James-Yu/LaTeX-Workshop",
@@ -1107,7 +1107,19 @@
           "scope": "window",
           "type": "boolean",
           "default": true,
-          "markdownDescription": "Use kpsewhich as defined by `#latex-workshop.kpsewhich.path#` to resolve latex class and bibliography file paths for intellisense parsing."
+          "markdownDeprecationMessage": "**Deprecated**: Please use `#latex-workshop.kpsewhich.class.enabled#` and `#latex-workshop.kpsewhich.bibtex.enabled#` instead."
+        },
+        "latex-workshop.kpsewhich.class.enabled": {
+          "scope": "window",
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Use kpsewhich as defined by `#latex-workshop.kpsewhich.path#` to resolve latex class paths for intellisense parsing."
+        },
+        "latex-workshop.kpsewhich.bibtex.enabled": {
+          "scope": "window",
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Use kpsewhich as defined by `#latex-workshop.kpsewhich.path#` to resolve bibliography file paths for intellisense parsing."
         },
         "latex-workshop.latex.bibDirs": {
           "scope": "window",
@@ -1668,11 +1680,26 @@
           "default": "synctex",
           "markdownDescription": "Define the location of SyncTeX executive file. Additional arguments, e.g., synctex modes and position of click, will be appended to this command."
         },
+        "latex-workshop.synctex.indicator": {
+          "scope": "window",
+          "type": "string",
+          "enum": [
+            "none",
+            "circle",
+            "rectangle"
+          ],
+          "enumDescriptions": [
+            "Hide the indicator.",
+            "Indicates a possible location with a red circular SyncTeX indicator.",
+            "Indicates the whole line selected in the TeX file with a red rectangular SyncTeX indicator. Only valid when SyncTeX binary is executable."
+          ],
+          "default": "rectangle",
+          "markdownDescription": "Define the visibility and style of SyncTeX indicator after a forward SyncTeX in the PDF viewer."
+        },
         "latex-workshop.synctex.indicator.enabled": {
           "scope": "window",
           "type": "boolean",
-          "default": true,
-          "markdownDescription": "Define the visibility of SyncTeX indicator (a red highlighting circle) after a forward SyncTeX in the PDF viewer."
+          "markdownDeprecationMessage": "**Deprecated**: Please use `#latex-workshop.synctex.indicator#` instead."
         },
         "latex-workshop.synctex.afterBuild.enabled": {
           "scope": "window",
@@ -1684,7 +1711,7 @@
           "scope": "window",
           "type": "boolean",
           "default": true,
-          "markdownDescription": "Enable using a builtin synctex function. The command set in latex-workshop.synctex.path will not be used."
+          "markdownDeprecationMessage": "**Deprecated**: This config has no use."
         },
         "latex-workshop.linting.chktex.enabled": {
           "scope": "resource",

@@ -1,5 +1,20 @@
 # Change Log
 
+## [9.20.0] - 2024-04-15
+
+### Added
+- (#4194) Add a more accurate rectangle indicator for SyncTeX to PDF.
+  - Config `synctex.indicator.enabled` is changed to `synctex.indicator` and now is a string config.
+
+### Changed
+- Now calling SyncTeX will prioritize binary over synctex.js.
+  - Makes `synctex.synctexjs.enabled` obsolete.
+
+### Fixed
+- (#4215) Use `kpsewhich.class.enabled` and `kpsewhich.bibtex.enabled` to control `kpsewhich`.
+  - Replaces `kpsewhich.enabled`.
+- (#4227) Ignore label defs in `xparse` macros.
+
 ## [9.19.2] - 2024-04-04
 
 ### Fixed

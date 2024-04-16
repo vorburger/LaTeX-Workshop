@@ -18,9 +18,10 @@ export const file = {
     getFlsPath,
     hasBinaryExt,
     hasTeXExt,
-    hasTexLangId,
+    hasTeXLangId,
     hasBibLangId,
     hasDtxLangId,
+    setTeXDirs,
     exists,
     read,
     kpsewhich
@@ -100,7 +101,7 @@ function hasBinaryExt(extname: string): boolean {
  * @param {string} langId - The language identifier.
  * @returns {boolean} - Indicates whether the language is supported.
  */
-function hasTexLangId(langId: string): boolean {
+function hasTeXLangId(langId: string): boolean {
     return ['tex', 'latex', 'latex-expl3', 'doctex', 'pweave', 'jlweave', 'rsweave'].includes(langId)
 }
 
@@ -124,6 +125,20 @@ function hasDtxLangId(langId: string): boolean {
     return langId === 'doctex'
 }
 
+const texDirs: {[tex: string]: {out?: string, aux?: string}} = {}
+/**
+ * Set the output and aux-files directory for a root file.
+ * @param tex - The path to a root TeX file.
+ * @param out - The corresponding outdir path.
+ * @param aux - The corresponding auxdir path.
+ */
+function setTeXDirs(tex: string, out?: string, aux?: string) {
+    if (!tex.endsWith('.tex')) {
+        tex += '.tex'
+    }
+    texDirs[tex] = {out, aux}
+}
+
 /**
  * Returns the output directory developed according to the input tex path and
  * 'latex.outDir' config. If `texPath` is `undefined`, the default root file is
@@ -145,7 +160,7 @@ function getOutDir(texPath?: string): string {
     const out = utils.replaceArgumentPlaceholders(texPath, file.tmpDirPath)(outDir)
     let result = undefined
     if (outDir === '%DIR%' || outDir === '%DIR_W32%') {
-        result = lw.compile.lastSteps.filter(step => step.outdir).slice(-1)[0]?.outdir
+        result = texDirs[texPath]?.out
     }
     result = result ?? path.normalize(out).replaceAll(path.sep, '/')
     if (result !== './' && result.endsWith('/')) {
@@ -216,7 +231,7 @@ function getFlsPath(texPath: string): string | undefined {
     if (fs.existsSync(flsFile)) {
         return flsFile.replaceAll(path.sep, '/')
     }
-    flsFile = path.resolve(rootDir, lw.compile.lastSteps.filter(step => step.auxdir).slice(-1)[0]?.auxdir ?? '', fileName)
+    flsFile = path.resolve(rootDir, texDirs[texPath]?.aux ?? '', fileName)
     return fs.existsSync(flsFile) ? flsFile.replaceAll(path.sep, '/') : undefined
 }
 
@@ -286,7 +301,7 @@ function getBibPath(bib: string, baseDir: string): string[] {
     const bibPath = bib.includes('*') ? utils.resolveFileGlob(searchDirs, bib, '.bib') : utils.resolveFile(searchDirs, bib, '.bib')
 
     if (bibPath === undefined || bibPath.length === 0) {
-        if (configuration.get('kpsewhich.enabled')) {
+        if (configuration.get('kpsewhich.bibtex.enabled')) {
             const kpsePath = kpsewhich(bib, true)
             return kpsePath ? [ kpsePath ] : []
         } else {

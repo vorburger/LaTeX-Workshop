@@ -64,9 +64,7 @@ export type Tool = {
     name: string,
     command: string,
     args?: string[],
-    env?: ProcessEnv,
-    outdir?: string,
-    auxdir?: string
+    env?: ProcessEnv
 }
 
 export type Recipe = {
@@ -108,6 +106,13 @@ export type SyncTeXRecordToTeX = {
     input: string,
     line: number,
     column: number
+}
+
+export type SyncTeXRecordToPDFAll = SyncTeXRecordToPDF & {
+    h: number,
+    v: number,
+    W: number,
+    H: number
 }
 
 export interface LaTeXLinter {
